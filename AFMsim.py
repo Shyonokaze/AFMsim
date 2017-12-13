@@ -114,8 +114,8 @@ def get_volume(ap):
 
 import numpy as np
 import matplotlib.pyplot as plt
-ap,Rou=readCAR('CHGCAR')
-_,Elf=readCAR('ELFCAR')
+#ap,Rou=readCAR('CHGCAR')
+#_,Elf=readCAR('ELFCAR')
 print("Reading Finished")
 pool_xyn=5
 pool_z=[159,209]
@@ -133,32 +133,35 @@ Rou_sz,Elf_sz=mean_z(Rou,Elf,volume,pool_z)
 for i in range(len(Center)):
     X.append([])
     X[i].append(mean_pool(Center[i],pool_xyn,Elf_sz))
-    X[i].append(mean_pool(Center[i],pool_xyn,Rou_sz)/10)
+    X[i].append(mean_pool(Center[i],pool_xyn,Rou_sz))
     Y[i]=Y[i]
     
 print("Pooling Finished")
 print("Begin to Fit")
 AFMfit=Gra_fit(X,Y,a=0.01,b=0.01)
-for i in range(80000):
+for i in range(8000):
+    '''
     if i <= 20000:
         AFMfit.optimizer(learning_rate_alpha=4e-1,learning_rate_beta=4e-1)
     elif i<=50000:
         AFMfit.optimizer(learning_rate_alpha=1e-1,learning_rate_beta=1e-1)
-    else:
-        
+    else:        
         AFMfit.optimizer(learning_rate_alpha=5e-3,learning_rate_beta=5e-3)
+    '''
 #    print(AFMfit.getting_cost(),value(AFMfit.alpha,AFMfit.beta,X[0]),Y[0],
 #          value(AFMfit.alpha,AFMfit.beta,X[1]),Y[1],
 #          value(AFMfit.alpha,AFMfit.beta,X[2]),Y[2])
+    AFMfit.optimizer(learning_rate_alpha=4e-1,learning_rate_beta=4e-1)
     print(AFMfit.getting_cost(),value(AFMfit.alpha,AFMfit.beta,X[0]),Y[0],
           value(AFMfit.alpha,AFMfit.beta,X[1]),Y[1])
+    
 
 print("Begin to print graph")
 fit_res=[]
 for i in range(len(Rou_sz)):
     fit_res.append([])
     for j in range(len(Rou_sz[i])):
-        fit_res[i].append(value(AFMfit.alpha,AFMfit.beta,[Elf_sz[i][j],Rou_sz[i][j]/1e2]))
+        fit_res[i].append(value(AFMfit.alpha,AFMfit.beta,[Elf_sz[i][j],Rou_sz[i][j]]))
         
 x=np.linspace(0,13.235700,len(fit_res))
 y=np.linspace(0,12.736000,len(fit_res[i]))
