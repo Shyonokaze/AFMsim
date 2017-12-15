@@ -29,7 +29,7 @@ class Gra_fit(object):
         for i in range(len(self.input)):
             cost=cost+(self.obtain[i]-self.alpha*np.power(self.input[i][0],self.beta)*
                        self.input[i][1])**2
-        cost=cost/len(self.input)
+        cost=np.sqrt(cost/len(self.input))
         return cost 
     
 
@@ -85,11 +85,11 @@ def readCAR(file):
     return ap,fft
 
 def mean_pool(center,pool_num,X):
-    pool_num=int(pool_num)
     pool_results=0
-    for i in range(int(center[0]-pool_num/2),int(center[0]+pool_num/2+1)):
-        for j in range(int(center[1]-pool_num/2),int(center[1]+pool_num/2+1)):
-            pool_results=pool_results+X[i][j]            
+    for i in range(int(center[0]-int(pool_num/2)),int(center[0]+int(pool_num/2)+1)):
+        for j in range(int(center[1]-int(pool_num/2)),int(center[1]+int(pool_num/2)+1)):
+            pool_results=pool_results+X[i][j]    
+#            print(i,j,X[i][j])
     return pool_results/(pool_num*pool_num)
                 
 def mean_z(Rou,Elf,volume,pool_z):
@@ -105,8 +105,8 @@ def mean_z(Rou,Elf,volume,pool_z):
             for k in range(pool_z[0],pool_z[1]):
                 rou_sum=rou_sum+Rou[k][j][i]
                 elf_sum=elf_sum+Elf[k][j][i]
-            Rou_sz[i].append(rou_sum/((pool_z[1]-pool_z[0]-1)*volume))
-            Elf_sz[i].append(elf_sum/(pool_z[1]-pool_z[0]-1))
+            Rou_sz[i].append(rou_sum/((pool_z[1]-pool_z[0])*volume))
+            Elf_sz[i].append(elf_sum/(pool_z[1]-pool_z[0]))
     return Rou_sz,Elf_sz
 
 def get_volume(ap):
@@ -117,15 +117,19 @@ import matplotlib.pyplot as plt
 #ap,Rou=readCAR('CHGCAR')
 #_,Elf=readCAR('ELFCAR')
 print("Reading Finished")
-pool_xyn=5
-pool_z=[159,209]
+pool_xyn=3
+#pool_z=[159,209]
+#pool_z=[267,299]
+pool_z=[184,219]
 
 volume=get_volume(ap)
 #Center=[[81,107],[98,117],[113,106]]
-Center=[[98,117],[113,106]]
+#Center=[[90,107],[99,107],[107,107],[114,107],[122,107],[98,117],[113,106]]
+Center=[[107,107],[114,107],[122,107],[119,112],[116,117],[113,122],[110,128],[105,124]]
 X=[]
 #Y=[2.6414,1.7232,1.1946]
-Y=[1.7232,1.1946]
+#Y=[1.9294,1.4186,1.0594,0.9034,0.6664,1.7232,1.1946]
+Y=[2.4752,2.4722,2.0422,2.216,2.2352,2.2034,2.1028,2.6382]
 
 Rou_sz,Elf_sz=mean_z(Rou,Elf,volume,pool_z)
             
@@ -135,25 +139,37 @@ for i in range(len(Center)):
     X[i].append(mean_pool(Center[i],pool_xyn,Elf_sz))
     X[i].append(mean_pool(Center[i],pool_xyn,Rou_sz))
     Y[i]=Y[i]
+
     
 print("Pooling Finished")
 print("Begin to Fit")
-AFMfit=Gra_fit(X,Y,a=0.01,b=0.01)
-for i in range(8000):
-    '''
-    if i <= 20000:
-        AFMfit.optimizer(learning_rate_alpha=4e-1,learning_rate_beta=4e-1)
+AFMfit=Gra_fit(X,Y,a=2.4388102160586893,b= -1.0203606200710766)
+
+for i in range(10000):
+    '''    
+    if i <= 10000:
+        AFMfit.optimizer(learning_rate_alpha=100,learning_rate_beta=1e-1)
     elif i<=50000:
-        AFMfit.optimizer(learning_rate_alpha=1e-1,learning_rate_beta=1e-1)
+        AFMfit.optimizer(learning_rate_alpha=10,learning_rate_beta=1e-1)
     else:        
-        AFMfit.optimizer(learning_rate_alpha=5e-3,learning_rate_beta=5e-3)
+        AFMfit.optimizer(learning_rate_alpha=1e-1,learning_rate_beta=5e-3)
+    '''
+    AFMfit.optimizer(learning_rate_alpha=1,learning_rate_beta=0.01) 
     '''
 #    print(AFMfit.getting_cost(),value(AFMfit.alpha,AFMfit.beta,X[0]),Y[0],
 #          value(AFMfit.alpha,AFMfit.beta,X[1]),Y[1],
 #          value(AFMfit.alpha,AFMfit.beta,X[2]),Y[2])
-    AFMfit.optimizer(learning_rate_alpha=4e-1,learning_rate_beta=4e-1)
+    '''
+
     print(AFMfit.getting_cost(),value(AFMfit.alpha,AFMfit.beta,X[0]),Y[0],
           value(AFMfit.alpha,AFMfit.beta,X[1]),Y[1])
+    '''
+#
+#    print(AFMfit.getting_cost(),value(AFMfit.alpha,AFMfit.beta,X[0]),Y[0],
+#          value(AFMfit.alpha,AFMfit.beta,X[2]),Y[2],
+#          value(AFMfit.alpha,AFMfit.beta,X[3]),Y[3],
+#          value(AFMfit.alpha,AFMfit.beta,X[4]),Y[4])
+    '''
     
 
 print("Begin to print graph")
@@ -166,4 +182,9 @@ for i in range(len(Rou_sz)):
 x=np.linspace(0,13.235700,len(fit_res))
 y=np.linspace(0,12.736000,len(fit_res[i]))
 x_mesh,y_mesh=np.meshgrid(x,y) 
-c=plt.contourf(x_mesh,y_mesh,fit_res, 8, alpha = 1,cmap=plt.cm.afmhot)
+c=plt.contourf(y_mesh,x_mesh,fit_res, 8, alpha = 1,cmap=plt.cm.afmhot)
+plt.show()
+c=plt.contourf(y_mesh,x_mesh,Rou_sz, 8, alpha = 1,cmap=plt.cm.afmhot)
+plt.show()
+c=plt.contourf(y_mesh,x_mesh,Elf_sz, 8, alpha = 1,cmap=plt.cm.afmhot)
+plt.show()
